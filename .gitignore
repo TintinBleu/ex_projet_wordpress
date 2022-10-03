@@ -1,0 +1,7 @@
+vbox_terraform/terraform.tfstate
+vbox_terraform/terraform.tfstate.backup
+vbox_terraform/virtualbox.box
+vbox_terraform/.terraform/
+vbox_terraform/.terraform.lock.hcl
+vbox_terraform/.terraform.tfstate.lock.info
+
