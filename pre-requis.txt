@@ -1,0 +1,10 @@
+PRE-REQUIS
+
+Prealable :
+- Ajouter notre clef publique a ubuntu1 et ubuntu2
+- Se mettre en sudoer sans mot de passe sur ubuntu1 et ubuntu2
+
+Serveur DNS :
+- Possibilité de allow-update à partir de ubuntu1 pour nsupdate
+
+

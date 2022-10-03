@@ -1,0 +1,21 @@
+---
+master:
+  name: ubuntu1
+  ip: 172.19.30.156
+
+ns_update:
+  server: 172.19.30.19
+  zone: jerome.lan
+
+nfs_server: 172.19.30.156
+
+user: jerome
+
+insecure_registry: gitlab.jerome.lan:5005
+
+# ne rien rajouter sous cette ligne !!!!!!!!
+
+round_robin_ips:
+  - 172.19.30.156
+  - 172.19.30.159
+  - 172.19.30.155

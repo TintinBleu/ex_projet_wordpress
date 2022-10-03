@@ -1,0 +1,16 @@
+---
+- hosts: ubuntu1
+  handlers:
+    - name: service nfs
+      service:
+        name: nfs-kernel-server
+        state: restarted
+
+  tasks:
+     - name: rajoute l'adresse ip aux fichier /etc/exports
+       replace:
+         backup: true
+         dest: /etc/exports
+         regexp: '^(/home/.*)$'
+         replace: '\1  {{  ip  }}(rw)'
+       notify: service nfs

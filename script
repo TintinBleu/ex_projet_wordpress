@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+BASEDIR=$(pwd)
+
+cd $BASEDIR/vbox_terraform
+./createvm
+
+cd $BASEDIR
+nb=$(grep '^count' vbox_terraform/createvm|cut -d= -f2) 
+vm=$(sed -n '1p' vbox_terraform/vms.txt|cut -d: -f1|tr -d ' ')
+ip=$(sed -n '1p' vbox_terraform/vms.txt|cut -d: -f2|tr -d ' ')
+
+#echo $nb
+#echo $vm
+#echo $ip
+
+cd $BASEDIR/ansible_playbooks
+for ((i=1;i<=$nb;i++)) ; do
+	ansible-playbook preconfig.yml -e "ip=$ip" -e "vm=$vm" -i hosts
+	ansible-playbook nfs.yml -e "ip=$ip" -i hosts
+done
+
+ansible-playbook bind.yml -i hosts
+
+for ((i=1;i<=$nb;i++)) ; do
+	ansible-playbook vm_config.yml -e "vm=$vm" -i hosts
+	ansible-playbook mk8s.yml -e "vm=$vm" -e "ip=$ip" -i hosts
+done
+
+ansible-playbook bind.yml -i hosts
+
+# vérifications
+
+ssh jerome@ubuntu1.jerome.lan sudo microk8s.kubectl get nodes
+
+host ubuntu.jerome.lan
+

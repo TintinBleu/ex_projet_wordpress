@@ -1,0 +1,79 @@
+---
+- hosts: '{{ vm }}'
+  tasks:
+    - name: inclusion des variables
+      include_vars: vars.yml
+
+    - name: inscrit le hostname du node master dans /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ master.ip }} {{ master.name }}"
+        state: present
+
+    - name: ufw
+      shell: |
+        ufw allow in on cni0 && sudo ufw allow out on cni0
+        ufw default allow routed
+
+    - name: installation de microk8s
+      snap:
+        name: microk8s
+        classic: true
+        state: present
+
+    - name: microk8s insecure registry
+      file:
+        path: /var/snap/microk8s/current/args/certs.d/{{ insecure_registry }} 
+        state: directory
+
+    - name: microk8s insecure registry
+      template:
+        src: templates/hosts.j2
+        dest: /var/snap/microk8s/current/args/certs.d/{{ insecure_registry }}/hosts.toml
+
+- hosts: ubuntu1
+  tasks:
+
+    - name: inscrit le hostname de la nouvelle machine dans /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        line: "{{ ip }} {{ vm }}"
+        state: present
+
+    - name: extraction du jeton pour joindre le nouveau node
+      shell: microk8s.add-node| grep " \-\-worker" >add-node.sh
+
+    - name: recuperation du jeton sur la machine hote
+      fetch:
+        src: add-node.sh
+        dest: /tmp/
+        flat: true
+
+- hosts: '{{ vm }}'
+  tasks:
+    - name: recuperation du jeton sur la vm
+      copy:
+        src: /tmp/add-node.sh
+        dest: add-node.sh
+
+    - name: Recherche si le node est déjà membre du cluster
+      shell: microk8s status |grep -sq "acting as a node in a cluster"
+      register: checkip
+      ignore_errors: true
+
+    - name: jonction du node au cluster
+      shell: bash add-node.sh
+      when: checkip.rc != 0 # return.code
+
+- hosts: ubuntu1
+  tasks:
+    - name: inclusion des variables
+      include_vars: vars.yml
+
+    - name: ajout de l adresse ip au round robin dans bind
+      nsupdate:
+        server: "{{ ns_update.server }}"
+        zone: "{{ ns_update.zone }}"
+        record: "ubuntu"
+        value: "{{ round_robin_ips }}"
+

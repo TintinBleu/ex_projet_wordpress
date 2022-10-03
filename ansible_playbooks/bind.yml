@@ -1,0 +1,7 @@
+---
+- hosts: resolver
+  tasks:
+    - name: redémarrage de bind
+      service:
+        name: bind9
+        state: restarted

@@ -1,0 +1,6 @@
+resolver ansible_host=jerome.lan ansible_user=jerome ansible_become=true
+
+[kubernetes]
+ubuntu1	ansible_host=ubuntu1.jerome.lan	ansible_user=jerome ansible_become=true
+ubuntu2	ansible_host=ubuntu2.jerome.lan	ansible_user=jerome ansible_become=true 
+ubuntu3 ansible_host=ubuntu3.jerome.lan ansible_user=vagrant ansible_become=true

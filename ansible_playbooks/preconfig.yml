@@ -1,0 +1,30 @@
+---
+# 
+# nécessite sur ubuntu1 : bind9-dnsutils (déjà installé) et python3-pip, et dns-python via pip install... 
+#
+
+- hosts: ubuntu1
+  tasks:
+
+    - name: inclusion des variables
+      include_vars: vars.yml
+
+    - name: nsupdate
+      nsupdate:
+        server: "{{ ns_update.server }}"
+        zone: "{{ ns_update.zone }}"
+        record: "{{ vm }}"
+        value: "{{ ip }}"
+
+- hosts: localhost
+  tasks:
+    - name: inventory
+      lineinfile:
+        path: hosts
+        line: "{{ vm }} ansible_host={{ vm }}.jerome.lan ansible_user=vagrant ansible_become=true"
+        state: present
+
+    - name: ajout mise à jour variables 
+      lineinfile:
+        path: vars.yml
+        line: "  - {{ ip }}"

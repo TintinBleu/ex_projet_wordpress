@@ -1,0 +1,83 @@
+---
+- hosts: "{{ vm }}"
+
+  handlers:
+    - name: service docker
+      service:
+        name: docker
+        state: restarted
+
+  tasks:
+    - name: inclusion des variables
+      include_vars: vars.yml
+
+    - apt:
+        name:
+          - nfs-common
+          - docker.io
+        state: present
+        update-cache: true
+
+    - template:
+        src: daemon.j2
+        dest: /etc/docker/daemon.json
+      notify: service docker
+
+    - name: mappage (lien symbolique) de /home/vagrant avec /home/user pour le montage nfs
+      file:
+        src: /home/vagrant
+        dest: /home/{{ user }} 
+        state: link
+
+    - name: Remove the user ubuntu
+      user:
+        name: ubuntu
+        state: absent
+
+    - name: Remove ubuntu home directory
+      file:
+        path: /home/ubuntu
+        state: absent
+
+    - name: Add the user gitlab-runner
+      user:
+        name: gitlab-runner
+        state: present
+
+    - name: creation du repertoire data chez vagrant
+      file:
+        path: /home/vagrant/data
+        state: directory
+
+    - name: creation du repertoire www chez gitlab-runner
+      file:
+        path: /home/gitlab-runner/www
+        state: directory
+
+    - name: montage nfs /home/vagrant/data etape1
+      mount:
+        src: "{{ nfs_server }}:/home/{{ user }}/data"
+        path: /home/vagrant/data
+        state: unmounted
+
+    - name: montage nfs /home/vagrant/data etape2
+      mount:
+        src: "{{ nfs_server }}:/home/{{ user }}/data"
+        path: /home/vagrant/data
+        state: mounted
+        opts: _netdev,auto
+        fstype: nfs4
+
+    - name: montage nfs /home/gitlab-runner/www etape1
+      mount:
+        src: "{{ nfs_server }}:/home/gitlab-runner/www"
+        path: /home/gitlab-runner/www
+        state: unmounted
+
+    - name: montage nfs /home/gitlab-runner/www etape2
+      mount:
+        src: "{{ nfs_server }}:/home/gitlab-runner/www"
+        path: /home/gitlab-runner/www
+        state: mounted
+        opts: _netdev,auto
+        fstype: nfs4
